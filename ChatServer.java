@@ -1,72 +1,89 @@
 import java.net.*;
- import java.util.*;
- import java.io.*;
- 
+import java.util.*;
+import java.io.*;
+
 public class ChatServer {
- private ArrayList<Client> clients = new ArrayList<Client>();
+	public static void main(String[] args) {
+		Server server = new Server();
+		server.start();
+	}
+}
 
- public static void main(String[] args) {
- new ChatServer().start();
- }
+class Server {
+	private ArrayList<Client> clients = new ArrayList<Client>();
+	final int PORT = 18889;
 
- private void start(){
- ServerSocket ss=null;
- int i=0;
- try {
- ss = new ServerSocket(8888);
- //started = true;
- while(true){
- i++; 
-Client c = new Client(ss.accept());
- System.out.println(i+" client logined");//ÊÔÓÃÊä³ö
-new Thread(c).start();
- clients.add(c);
- }
- } catch (IOException e1) {
- e1.printStackTrace();
- }
- }
- 
-private class Client implements Runnable{
- private Socket s = null;
- private boolean beConnect = false;
- private String line=null;
- private BufferedReader br = null;
- private PrintWriter pw = null;
+	public void start() {
+		ServerSocket ss = null;
 
- Client (Socket s){
- this.s=s;
- beConnect = true;
- try {
- br = new BufferedReader(new InputStreamReader(s.getInputStream()));
- pw = new PrintWriter(s.getOutputStream());
- } catch (IOException e) {
- e.printStackTrace();
- }
- }
+		try {
+			ss = new ServerSocket(PORT);
+			// started = true;
+			while (true) {
+				Client c = new Client(ss.accept());
+				System.out.println(clients.size() + " client logined");// è¯•ç”¨è¾“å‡º
+				Thread thread = new Thread(c);
+				thread.start();
+				clients.add(c);
+			}
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
 
- public void run() {
- while(beConnect){
- try {
- line=br.readLine();
- if(null!=line){
- System.out.println(line);//Êä³öµ½¿ØÖÆÌ¨£¬µ÷ÊÔÊ¹ÓÃ¡£
-for(int i=0;i<clients.size();i++)
- {
- Client c = clients.get(i);
- c.send(line);
- }
- }else{
- beConnect = false;
- }
- } catch (IOException e) {
- e.printStackTrace();
- }
- }
- }
+	private void send(String str) {
+		for (int i = 0; i < clients.size(); i++) {
+			PrintWriter pw;
+			try {
+				pw = new PrintWriter(clients.get(i).getSocket()
+						.getOutputStream());
+				pw.println(str);
+				pw.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
- private void send(String str){
- pw.println(str);
- }
- }
- }
+		}
+	}
+
+	private class Client implements Runnable {
+		private Socket s = null;
+		private String line = null;
+		private BufferedReader br = null;
+
+		public Socket getSocket() {
+			return s;
+		}
+
+		Client(Socket s) {
+			this.s = s;
+			try {
+				br = new BufferedReader(new InputStreamReader(
+						s.getInputStream()));
+				// pw = new PrintWriter(s.getOutputStream());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		public void run() {
+			while (s.isConnected()) {
+				try {
+					line = br.readLine();
+					if (line == null) {
+						s.close();
+						return;
+					}
+					System.out.println(line);// è¾“å‡ºåˆ°æŽ§åˆ¶å°ï¼Œè°ƒè¯•ä½¿ç”¨ã€‚
+					// /for (int i = 0; i < clients.size(); i++) {
+					// Client c = clients.get(i);
+					send(line);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+	}
+}
