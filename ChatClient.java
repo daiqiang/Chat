@@ -1,98 +1,113 @@
 import java.awt.*;
- import java.awt.event.*;
- import java.io.*;
- import java.net.*;
- 
-public class ChatClient extends Frame{
- TextArea displayFrame = new TextArea();
- TextField inputFrame= new TextField();
- Socket s;
- PrintWriter pw;
- BufferedReader br = null;
- //lineÓÃÓÚ¶ÁÈ¡ÊäÈëĞĞµÄÒ»ĞĞ×Ö·û´®£¬½»¸øprintwriter½øĞĞĞ´Èë
-String line = null;
+import java.awt.event.*;
+import java.io.*;
+import java.net.*;
 
- private static final long serialVersionUID = 1L;
- public ChatClient(String title){
- //³õÊ¼»¯´°¿Ú½çÃæ
-super(title);
- this.setBounds(100, 100, 450, 370);
- this.setVisible(true);
- this.setLayout(new BorderLayout());
- this.add(displayFrame,BorderLayout.CENTER);
- displayFrame.setEditable(false);
- this.add(inputFrame,BorderLayout.SOUTH);
- //¸øÊäÈë¿òÌí¼ÓÒ»¸ö°´»Ø³µµÄ¼àÌıÆ÷
-inputFrame.addActionListener(new MyListener());
- //Ôö¼Ó¹Ø±Õ´°¿ÚµÄ¼àÌıÆ÷
-this.addWindowListener(new WindowAdapter(){
- public void windowClosing(WindowEvent e) {
- try {
- //s.shutdownOutput();//¿Í»§¶ËsocketÊ¹ÓÃshutdownOutput() ´úÌæ close() 
- s.close();
- //pw.flush();
- //pw.close();
- br.close();
- System.exit(0);
- } catch (IOException e1) {
- e1.printStackTrace();
- }
- }
- });
- //Á¬½Óµ½·şÎñÆ÷
-connect();
- }
- public static void main(String[] args) {
- ChatClient chatClient = new ChatClient("¿Í»§¶Ë´°¿Ú");
- }
-private class MyListener implements ActionListener{
- public void actionPerformed(ActionEvent e) {
- line=inputFrame.getText();
- displayFrame.setText(displayFrame.getText()+line+"\n");
- inputFrame.setText("");
- try {
- pw = new PrintWriter(s.getOutputStream());
- pw.println(line);
- pw.flush();
- } catch (IOException e1) {
- e1.printStackTrace();
- }
+public class ChatClient extends Frame {
+	TextArea displayFrame = new TextArea();
+	TextField inputFrame = new TextField();
+	Socket s;
+	PrintWriter pw;
+	BufferedReader br = null;
+	// lineç”¨äºè¯»å–è¾“å…¥è¡Œçš„ä¸€è¡Œå­—ç¬¦ä¸²ï¼Œäº¤ç»™printwriterè¿›è¡Œå†™å…¥
+	String line = null;
 
- }
- }
- private void connect(){
- try {
- s = new Socket("localhost",8888);
- new Thread(new RecvThread()).start();
- System.out.println("connect server");
- } catch (UnknownHostException e) {
- e.printStackTrace();
- } catch (IOException e) {
- e.printStackTrace();
- }
- }
- private class RecvThread implements Runnable{
- String str = null;
- RecvThread(){
- try {
- br=new BufferedReader(new InputStreamReader(s.getInputStream()));
- } catch (IOException e) {
- e.printStackTrace();
- }
- }
+	private static final long serialVersionUID = 1L;
 
- public void run() {
- try {
- while(true)
- {
- System.out.print("xxxx");
- str=br.readLine();
- System.out.println(str);//Õâ¾äÊı¾İÓÃÓÚµ÷ÊÔ£¬ÔÚ¿ØÖÆÌ¨ÏÔÊ¾ÏûÏ¢£¬µ«Ã»ÓĞÖ´ĞĞ¡£
+	public ChatClient(String title) {
+		// åˆå§‹åŒ–çª—å£ç•Œé¢
+		super(title);
+		this.setBounds(100, 100, 450, 370);
+		this.setVisible(true);
+		this.setLayout(new BorderLayout());
+		this.add(displayFrame, BorderLayout.CENTER);
+		displayFrame.setEditable(false);
+		this.add(inputFrame, BorderLayout.SOUTH);
+		// ç»™è¾“å…¥æ¡†æ·»åŠ ä¸€ä¸ªæŒ‰å›è½¦çš„ç›‘å¬å™¨
+		inputFrame.addActionListener(new MyListener());
+		// å¢åŠ å…³é—­çª—å£çš„ç›‘å¬å™¨
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				try {
+					// s.shutdownOutput();//å®¢æˆ·ç«¯socketä½¿ç”¨shutdownOutput() ä»£æ›¿
+					// close()
+					s.close();
+					// pw.flush();
+					// pw.close();
+					br.close();
+					System.exit(0);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+		// è¿æ¥åˆ°æœåŠ¡å™¨
+		connect();
+	}
+
+	public static void main(String[] args) {
+		ChatClient chatClient = new ChatClient("å®¢æˆ·ç«¯çª—å£");
+	}
+
+	private class MyListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			line = inputFrame.getText();
+			if(0==line.indexOf("close"))
+			{
+				try {
+					s.close();
+				} catch (IOException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+			}
+			displayFrame.setText(displayFrame.getText() + line + "\n");
+			inputFrame.setText("");
+			try {
+				pw = new PrintWriter(s.getOutputStream());
+				pw.println(line);
+				pw.flush();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+
+		}
+	}
+
+	private void connect() {
+		try {
+			s = new Socket("localhost", 18889);
+			new Thread(new RecvThread()).start();
+			System.out.println("connect server");
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private class RecvThread implements Runnable {
+		String str = null;
+
+		RecvThread() {
+			try {
+				br = new BufferedReader(new InputStreamReader(
+						s.getInputStream()));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		public void run() {
+			try {
+				while (true) {
+					System.out.print("xxxx");
+					str = br.readLine();
+					System.out.println(str);// è¿™å¥æ•°æ®ç”¨äºè°ƒè¯•ï¼Œåœ¨æ§åˆ¶å°æ˜¾ç¤ºæ¶ˆæ¯ï¼Œä½†æ²¡æœ‰æ‰§è¡Œã€‚
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }
- } catch (IOException e) {
- e.printStackTrace();
- }
- }
- }
- }
- 
